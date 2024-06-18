@@ -10,7 +10,9 @@ if (!isset($_SESSION['user_id'])) {
 
 // Check if event ID is set in the POST data
 if (!isset($_POST['event_id'])) {
-    echo "Error: No event selected.";
+    $_SESSION['message'] = "Error: No event selected.";
+    $_SESSION['message_type'] = "danger";
+    header("Location: registerToEvent.php?event_id=" . $_POST['event_id']);
     exit();
 }
 
@@ -28,7 +30,9 @@ try {
     $result_check_registration = pg_execute($conn, "check_registration", array($event_id, $user_id));
 
     if (pg_num_rows($result_check_registration) > 0) {
-        echo "<script>alert('You have already registered for this event.');</script>";
+        $_SESSION['message'] = "You have already registered for this event.";
+        $_SESSION['message_type'] = "warning";
+        header("Location: registerToEvent.php?event_id=" . $event_id);
         exit();
     }
 
@@ -42,17 +46,21 @@ try {
     if ($result_insert_registration) {
         // Commit transaction
         pg_query($conn, "COMMIT");
-        echo "Successfully registered for the event.";
+        $_SESSION['message'] = "Successfully registered for the event.";
+        $_SESSION['message_type'] = "success";
     } else {
         // Rollback transaction in case of error
         pg_query($conn, "ROLLBACK");
-        echo "Error: Failed to register for the event.";
+        $_SESSION['message'] = "Error: Failed to register for the event.";
+        $_SESSION['message_type'] = "danger";
     }
 } catch (Exception $e) {
     // Rollback transaction in case of exception
     pg_query($conn, "ROLLBACK");
-    echo "Error: " . $e->getMessage();
+    $_SESSION['message'] = "Error: " . $e->getMessage();
+    $_SESSION['message_type'] = "danger";
 }
 
-pg_close($conn);
+header("Location: registerToEvent.php?event_id=" . $event_id);
+exit();
 ?>

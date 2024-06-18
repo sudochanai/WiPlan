@@ -1,21 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Event Registration</title>
-
-</head>
-
-<body>
-
-
-</body>
-
-</html>
-
-
 <?php
 session_start();
 include 'conn.php';
@@ -31,7 +13,8 @@ if (!isset($_GET['event_id'])) {
     echo "Error: No event selected.";
     exit();
 }
-//check session
+
+// Check session for privileges
 $privileges = $_SESSION['privileges'];
 
 // Get the event ID from the URL
@@ -50,13 +33,14 @@ if (!$result_event || pg_num_rows($result_event) == 0) {
 // Fetch event details
 $event = pg_fetch_assoc($result_event);
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <title>Dashboard</title>
+    <title>Event Registration</title>
 
     <!-- Montserrat Font -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -67,17 +51,6 @@ $event = pg_fetch_assoc($result_event);
     <!-- Custom CSS -->
     <link rel="stylesheet" href="./css/bootstrap.css">
     <link rel="stylesheet" href="../css/styles.css">
-
-    <style>
-        /* Custom styles for report issue options */
-        .container {
-            width: 90%;
-            padding: 30px;
-            margin: 30px auto;
-            border: 1px solid rgba(0, 0, 0, 0.5);
-            border-radius: 5px;
-        }
-    </style>
 
 </head>
 
@@ -124,8 +97,8 @@ $event = pg_fetch_assoc($result_event);
                         </li>
                     </a>
                     <a href="manage_events.php">
-                        <li class="sidebar-list-item" ">
-                    <span class=" material-icons-outlined">swap_horiz</span> Manage Event
+                        <li class="sidebar-list-item">
+                            <span class="material-icons-outlined">swap_horiz</span> Manage Event
                         </li>
                     </a>
                 <?php endif; ?>
@@ -137,18 +110,19 @@ $event = pg_fetch_assoc($result_event);
                 <li class="sidebar-list-item">
                     <span class="material-icons-outlined">settings</span> Settings
                 </li>
+            </ul>
         </aside>
         <!-- End Sidebar -->
+
         <!-- Main -->
         <main class="main-container">
             <div class="container">
                 <div class="">
-                
                     <?php
                     if ($event['image_url']) {
                         echo "<img class='event-image-divs' src='" . htmlspecialchars($event['image_url']) . "' alt='" . htmlspecialchars($event['image_url']) . "' >";
-                    } ?>
-               
+                    }
+                    ?>
                 </div>
                 <h2><?php echo $event['name']; ?></h2>
                 <p><?php echo $event['description']; ?></p>
@@ -161,7 +135,18 @@ $event = pg_fetch_assoc($result_event);
         </main>
         <!-- End Main -->
     </div>
-    <?php pg_close($conn); ?>
+
+    <!-- Toast notification -->
+    <?php
+    if (isset($_SESSION['message'])) {
+        echo '<div id="toast" class="toast ' . $_SESSION['message_type'] . ' show">'
+            . $_SESSION['message'] .
+            '</div>';
+        unset($_SESSION['message']);
+        unset($_SESSION['message_type']);
+    }
+    ?>
+
     <!-- Custom JS -->
     <script src="../js/script.js"></script>
 </body>

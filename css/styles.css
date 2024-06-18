@@ -272,3 +272,28 @@ input{
   height: 90%;
   object-fit: cover;
 }
+
+ /* Toast notification styles */
+ .toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  min-width: 250px;
+  padding: 15px;
+  border-radius: 5px;
+  color: white;
+  font-size: 16px;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.5s, transform 0.5s;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+.toast.success {
+  background-color: #28a745;
+}
+.toast.danger {
+  background-color: #dc3545;
+}

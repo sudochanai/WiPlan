@@ -13,7 +13,7 @@ $privileges = $_SESSION['privileges'];
 $user_id = $_SESSION['user_id'];
 
 // Fetch all events created by the organizer
-$query_organizer_events = "SELECT * FROM events WHERE event_id = $1";
+$query_organizer_events = "SELECT * FROM events WHERE organizer_id = $1";
 $result_organizer_events = pg_query_params($conn, $query_organizer_events, array($user_id));
 
 // Handle event deletion
@@ -21,7 +21,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['delete_event'])) {
     $event_id_to_delete = $_POST['event_id'];
     $query_delete_registration = "DELETE FROM registrations WHERE event_id = $1 AND user_id = $2";
     pg_query_params($conn, $query_delete_registration, array($event_id_to_delete, $user_id));
-    $_SESSION['message'] = "Event registration deleted successfully.";
+    $_SESSION['message'] = "Event deleted successfully.";
+    $_SESSION['message_type'] = "success";
     header("Location: dashboard.php");
     exit();
 }
@@ -47,19 +48,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['undo_delete'])) {
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="./css/bootstrap.css">
-    <link rel="stylesheet" href="../css/styles.css">
-
-    <style>
-        /* Custom styles for report issue options */
-        .container {
-            width: 90%;
-            padding: 30px;
-            margin: 30px auto;
-            border: 1px solid rgba(0, 0, 0, 0.5);
-            border-radius: 5px;
-        }
-    </style>
+    <link rel="stylesheet" href="css/bootstrap.css">
+    <link rel="stylesheet" href="css/styles.css">
 
 </head>
 
@@ -125,8 +115,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['undo_delete'])) {
 
         <!-- Main -->
         <main class="main-container">
-
+            ddddddddddddddddddddddddddddddddddd
             <div class="container">
+                <!-- Toast notification -->
+                <?php
+                if (isset($_SESSION['message'])) {
+                    echo '<div id="toast" class="toast ' . $_SESSION['message_type'] . '">'
+                        . $_SESSION['message'] .
+                        '</div>';
+                    unset($_SESSION['message']);
+                    unset($_SESSION['message_type']);
+                }
+                ?>
                 <h1>Upcoming Events</h1>
                 <div class='card-deck mb-3 text-center'>
                     <?php
@@ -156,9 +156,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['undo_delete'])) {
                     <a href="upcoming_events.php" class="btn btn-lg btn-block btn-outline-warning" style="color:black; border:1px solid;">View More Events</a>
                 </div>
             </div>
-            
-            <!-- this is in place incase tukitaka kuongeza a button for a person to view events they have registered to -->
-            <!-- <p><a href="view_registered_events.php">View Events</a></p> -->
+
+            <!-- Display Registered Events -->
             <div class="container">
                 <h2>Your Registered Events</h2>
                 <table class="table table-striped">
@@ -171,46 +170,47 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['undo_delete'])) {
                             <th>Action</th>
                         </tr>
                     </thead>
-                    <?php
-                    // Ensure the user is logged in
-                    if (isset($_SESSION['user_id'])) {
-                        $user_id = $_SESSION['user_id'];
+                    <tbody>
+                        <?php
+                        // Ensure the user is logged in
+                        if (isset($_SESSION['user_id'])) {
+                            $user_id = $_SESSION['user_id'];
 
-                        // Fetch registered events for the user
-                        $query_registered = "
-                            SELECT events.event_id, events.name, events.venue, events.time, registrations.barcode 
-                            FROM events 
-                            JOIN registrations ON events.event_id = registrations.event_id 
-                            WHERE registrations.user_id = $1
-                        ";
-                        $result_registered = pg_query_params($conn, $query_registered, array($user_id));
-                        while ($row = pg_fetch_assoc($result_registered)) {
-                            echo "<tr>
-                                <td>" . htmlspecialchars($row['name']) . "</td>
-                                <td>" . htmlspecialchars($row['venue']) . "</td>
-                                <td>" . htmlspecialchars($row['time']) . "</td>
-                                <td>" . htmlspecialchars($row['barcode']) . "</td>
-                                <td>
-                                    <form action='registerToEvent_delete.php' method='post' onsubmit='return confirm(\"Are you sure you want to delete this registration?\");'>
-                                        <input type='hidden' name='event_id' value='" . htmlspecialchars($row['event_id']) . "'>
-                                        <input type='submit' value='Delete' class='btn btn-danger'>
-                                    </form>
-                                </td>
-                            </tr>";
+                            // Fetch registered events for the user
+                            $query_registered = "
+                                SELECT events.event_id, events.name, events.venue, events.time, registrations.barcode 
+                                FROM events 
+                                JOIN registrations ON events.event_id = registrations.event_id 
+                                WHERE registrations.user_id = $1
+                            ";
+                            $result_registered = pg_query_params($conn, $query_registered, array($user_id));
+                            while ($row = pg_fetch_assoc($result_registered)) {
+                                echo "<tr>
+                                    <td>" . htmlspecialchars($row['name']) . "</td>
+                                    <td>" . htmlspecialchars($row['venue']) . "</td>
+                                    <td>" . htmlspecialchars($row['time']) . "</td>
+                                    <td>" . htmlspecialchars($row['barcode']) . "</td>
+                                    <td>
+                                        <form action='dashboard.php' method='post' onsubmit='return confirm(\"Are you sure you want to delete this registration?\");'>
+                                            <input type='hidden' name='event_id' value='" . htmlspecialchars($row['event_id']) . "'>
+                                            <input type='submit' name='delete_event' value='Delete' class='btn btn-danger'>
+                                        </form>
+                                    </td>
+                                </tr>";
+                            }
+                        } else {
+                            echo "<tr><td colspan='5'>Please log in to see your registered events.</td></tr>";
                         }
-                    } else {
-                        echo "<tr><td colspan='5'>Please log in to see your registered events.</td></tr>";
-                    }
-                    ?>
+                        ?>
+                    </tbody>
                 </table>
             </div>
-
         </main>
         <!-- End Main -->
     </div>
     <?php pg_close($conn); ?>
     <!-- Custom JS -->
-    <script src="../js/script.js"></script>
+    <script src="js/script.js"></script>
 </body>
 
 </html>

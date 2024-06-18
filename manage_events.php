@@ -8,6 +8,23 @@ if (!isset($_SESSION['user_id'])) {
 
 // Check user privileges
 $privileges = $_SESSION['privileges'];
+
+
+// Handle event deletion
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['delete_event'])) {
+    $event_id_to_delete = $_POST['event_id'];
+    $query_delete_registration = "DELETE FROM registrations WHERE event_id = $1 AND user_id = $2";
+    pg_query_params($conn, $query_delete_registration, array($event_id_to_delete, $user_id));
+    $_SESSION['message'] = "Event deleted successfully.";
+    $_SESSION['message_type'] = "success";
+    header("Location: dashboard.php");
+    exit();
+}
+
+// Undo deletion (if needed)
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['undo_delete'])) {
+    // Implement undo delete functionality as needed
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -121,6 +138,17 @@ $privileges = $_SESSION['privileges'];
             <!-- this is in place incase tukitaka kuongeza a button for a person to view events they have registered to -->
             <!-- <p><a href="view_registered_events.php">View Events</a></p> -->
             <div class="container">
+                    <!-- Toast notification -->
+                <?php
+                if (isset($_SESSION['message'])) {
+                    echo '<div id="toast" class="toast ' . $_SESSION['message_type'] . '">'
+                        . $_SESSION['message'] .
+                        '</div>';
+                    unset($_SESSION['message']);
+                    unset($_SESSION['message_type']);
+                }
+                ?>
+
                 <?php         // Fetch events
                 $event_user = $_SESSION['user_id'];
                 $query = "SELECT * FROM events WHERE organizer_id = $event_user ";

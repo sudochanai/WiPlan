@@ -12,14 +12,20 @@ if (!isset($_SESSION['user_id']) || $_SESSION['privileges'] != 'organizer') {
 $event_id = $_GET['event_id'];
 
 // Delete event from the database
-$query = "DELETE FROM events WHERE event_id = $event_id";
-$result = pg_query($conn, $query);
+$query = "DELETE FROM events WHERE event_id = $1";
+$result = pg_query_params($conn, $query, array($event_id));
 
 if ($result) {
+    $_SESSION['message'] = "Event deleted successfully.";
+    $_SESSION['message_type'] = "success";
     header("Location: manage_events.php");
     exit();
 } else {
-    echo "Error: Failed to delete event.";
+    $_SESSION['message'] = "Failed to delete event.";
+    $_SESSION['message_type'] = "danger";
+    header("Location: manage_events.php");
+    exit();
 }
 
 pg_close($conn);
+?>

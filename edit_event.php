@@ -26,10 +26,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $result = pg_query($conn, $query);
 
     if ($result) {
+        $_SESSION['message'] = "Event edit successful!";
+        $_SESSION['message_type'] = "success";
         header("Location: manage_events.php");
         exit();
     } else {
-        echo "Error: Failed to update event.";
+        $_SESSION['message'] = "Error while edit event.";
+        $_SESSION['message_type'] = "danger";
+        header("edit_event.php");
     }
 }
 

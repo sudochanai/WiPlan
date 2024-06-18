@@ -1,6 +1,8 @@
 <?php
 include 'conn.php'; // Include database connection
 
+session_start(); // Start the session
+
 // Start transaction
 pg_query($conn, "BEGIN");
 
@@ -19,14 +21,18 @@ $result = pg_query($conn, $query);
 if ($result) {
     // Commit transaction if insertion succeeds
     pg_query($conn, "COMMIT");
+    $_SESSION['message'] = "Registration successful!";
+    $_SESSION['message_type'] = "success";
     header("Location: login.php");
     exit();
 } else {
     // Rollback transaction if insertion fails
     pg_query($conn, "ROLLBACK");
-    echo "Error: User registration failed.";
+    $_SESSION['message'] = "Error: User registration failed.";
+    $_SESSION['message_type'] = "danger";
+    header("Location: register.php");
+    exit();
 }
 
 pg_close($conn);
 ?>
-
